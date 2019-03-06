@@ -4,6 +4,12 @@ import datetime
 from time import gmtime, strftime, localtime
 import pandas as pd
 import re
+from textblob import TextBlob
+#from textblob.base import PatternAnalyzer
+from textblob.base import BaseSentimentAnalyzer, DISCRETE, CONTINUOUS
+from collections import namedtuple
+
+
 
 class a_time():
     def __init__(a):
@@ -84,10 +90,110 @@ class BlogSpider(scrapy.Spider):
                     new_linkzz.append(z1)
                     new_linkz[times].append(new_linkzz)
         #import pandas
+        self.headlines = spanz_new
+        #for value in headlines.values():
+        #    headlines[times] = self.clean_headline(value)
+        parsed_headline = {'sentiment': []}
+        lstt = []
+        for value in self.headlines.values():
+            
+            lstt.append(value)
 
-        df = pd.DataFrame({'Headline': spanz_new[times], 'Link': new_linkz[times]})
+        for z in lstt:
+            for z1 in z:
+                s = ''.join(z1)
+                parsed_headline['sentiment'].append(self.get_headline_sentiment(s))
+
+
+
+
+        def sentiment(self):
+            pass
+            pheadlines = [headline for headline in headlines if headline['sentiment'] == 'positive'] 
+# percentage of positive headlines 
+            print("Positive headlines percentage: {} %".format(100*len(pheadlines)/len(headlines))) 
+# picking negative headlines from headlines 
+            nheadlines = [headline for headline in headlines if headline['sentiment'] == 'negative'] 
+# percentage of negative headlines 
+            print("Negative headlines percentage: {} %".format(100*len(nheadlines)/len(headlines))) 
+# percentage of neutral headlines 
+            print("Neutral headlines percentage: {} % \ ".format(100*len(headlines - nheadlines - pheadlines)/len(headlines))) 
+
+# printing first 5 positive headlines 
+            print("\n\nPositive headlines:") 
+            for headline in pheadlines[:10]: 
+                print(headlines['text']) 
+
+# printing first 5 negative headlines 
+            print("\n\nNegative headlines:") 
+            for headline in nheadlines[:10]: 
+                print(headlines['text']) 
+
+
+
+        df = pd.DataFrame({'Headline': spanz_new[times], 'sentiment': parsed_headline['sentiment'], 'Link': new_linkz[times]})
+        df['Headline'] = df['Headline'].str[0]
+        #df['sentiment'] = df['sentiment'].str[0]
+        df['Link'] = df['Link'].str[0]
         filename = times + ' news' + '.csv'
         df.to_csv(filename, sep='\t', encoding='utf-8')
+
+    def clean_headline(self, headline): 
+        ''' 
+        Utility function to clean tweet text by removing links, special characters 
+        using simple regex statements. 
+        '''
+        return ' '.join(re.sub('(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)', ' ', headline).split())
+
+
+    def get_headline_sentiment(self, headline): 
+        ''' 
+        Utility function to classify sentiment of passed tweet 
+        using textblob's sentiment method 
+        '''
+        # create TextBlob object of passed tweet text 
+        #import TextBlob
+
+        analysis = TextBlob(self.clean_headline(headline)) 
+        # set sentiment 
+        if analysis.sentiment.polarity > 0: 
+            return 'positive'
+        elif analysis.sentiment.polarity == 0: 
+            return 'neutral'
+        else: 
+            return 'negative'
+
+        a = PatternAnalyzer()
+        b = a.analyze(parsed_headline)
+        print(b)
+class PatternAnalyzer(BaseSentimentAnalyzer):
+    """Sentiment analyzer that uses the same implementation as the
+    pattern library. Returns results as a named tuple of the form:
+
+    ``Sentiment(polarity, subjectivity, [assessments])``
+
+    where [assessments] is a list of the assessed tokens and their
+    polarity and subjectivity scores
+    """
+    kind = CONTINUOUS
+    # This is only here for backwards-compatibility.
+    # The return type is actually determined upon calling analyze()
+    RETURN_TYPE = namedtuple('Sentiment', ['polarity', 'subjectivity'])
+
+    def analyze(self, text, keep_assessments=False):
+        """Return the sentiment as a named tuple of the form:
+        ``Sentiment(polarity, subjectivity, [assessments])``.
+        """
+        #: Return type declaration
+        if keep_assessments:
+            Sentiment = namedtuple('Sentiment', ['polarity', 'subjectivity', 'assessments'])
+            assessments = pattern_sentiment(text).assessments
+            polarity, subjectivity = pattern_sentiment(text)
+            return Sentiment(polarity, subjectivity, assessments)
+
+        else:
+            Sentiment = namedtuple('Sentiment', ['polarity', 'subjectivity'])
+            return Sentiment(*pattern_sentiment(text))
 
 class filter_news():
     def __init__(a):
@@ -111,3 +217,5 @@ class filter_news():
                             print(something)
         #a.time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         #return a.time
+
+
