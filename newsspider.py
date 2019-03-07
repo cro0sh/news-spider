@@ -5,11 +5,6 @@ from time import gmtime, strftime, localtime
 import pandas as pd
 import re
 from textblob import TextBlob
-#from textblob.base import PatternAnalyzer
-from textblob.base import BaseSentimentAnalyzer, DISCRETE, CONTINUOUS
-from collections import namedtuple
-
-
 
 class a_time():
     def __init__(a):
@@ -30,10 +25,11 @@ class BlogSpider(scrapy.Spider):
 
     def parse(self, response):
 
+        #a = response.css("div.mEaVNd")
         a = response.css("div.mEaVNd")
         #a.css('.ZulkBc').extract()
-
-        c = a.css('.ZulkBc').extract()  
+        c = a.css('.DY5T1d').extract()
+        # c = a.css('.ZulkBc').extract()  
 
         c = str(c)
         soup = BeautifulSoup(c, features="html.parser")
@@ -132,9 +128,9 @@ class BlogSpider(scrapy.Spider):
 
 
         df = pd.DataFrame({'Headline': spanz_new[times], 'sentiment': parsed_headline['sentiment'], 'Link': new_linkz[times]})
-        df['Headline'] = df['Headline'].str[0]
+        #df['Headline'] = df['Headline'].str[0]
         #df['sentiment'] = df['sentiment'].str[0]
-        df['Link'] = df['Link'].str[0]
+        #df['Link'] = df['Link'].str[0]
         filename = times + ' news' + '.csv'
         df.to_csv(filename, sep='\t', encoding='utf-8')
 
@@ -163,37 +159,8 @@ class BlogSpider(scrapy.Spider):
         else: 
             return 'negative'
 
-        a = PatternAnalyzer()
-        b = a.analyze(parsed_headline)
-        print(b)
-class PatternAnalyzer(BaseSentimentAnalyzer):
-    """Sentiment analyzer that uses the same implementation as the
-    pattern library. Returns results as a named tuple of the form:
+      
 
-    ``Sentiment(polarity, subjectivity, [assessments])``
-
-    where [assessments] is a list of the assessed tokens and their
-    polarity and subjectivity scores
-    """
-    kind = CONTINUOUS
-    # This is only here for backwards-compatibility.
-    # The return type is actually determined upon calling analyze()
-    RETURN_TYPE = namedtuple('Sentiment', ['polarity', 'subjectivity'])
-
-    def analyze(self, text, keep_assessments=False):
-        """Return the sentiment as a named tuple of the form:
-        ``Sentiment(polarity, subjectivity, [assessments])``.
-        """
-        #: Return type declaration
-        if keep_assessments:
-            Sentiment = namedtuple('Sentiment', ['polarity', 'subjectivity', 'assessments'])
-            assessments = pattern_sentiment(text).assessments
-            polarity, subjectivity = pattern_sentiment(text)
-            return Sentiment(polarity, subjectivity, assessments)
-
-        else:
-            Sentiment = namedtuple('Sentiment', ['polarity', 'subjectivity'])
-            return Sentiment(*pattern_sentiment(text))
 
 class filter_news():
     def __init__(a):
