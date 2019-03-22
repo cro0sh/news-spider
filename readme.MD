@@ -1,0 +1,1 @@
+This was a mini project that I did in 2019 that crawled the google news interface and worked on it. It was a joy to work on. Thank you google.
